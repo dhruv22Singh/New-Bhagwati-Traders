@@ -1,9 +1,7 @@
 import React, { useState, useMemo } from 'react';
 
 export default function Tools() {
-  const [activeTab, setActiveTab] = useState('paint-calc');
-
-  // Advanced Paint Calculator States
+  // Custom Paint Calculator States
   const [length, setLength] = useState('');
   const [width, setWidth] = useState('');
   const [height, setHeight] = useState('10');
@@ -11,10 +9,6 @@ export default function Tools() {
   const [windows, setWindows] = useState(2);
   const [coats, setCoats] = useState(2);
   const [paintType, setPaintType] = useState('interior');
-
-  // Room Calculator States
-  const [houseType, setHouseType] = useState('2bhk');
-  const [includeCeiling, setIncludeCeiling] = useState(true);
 
   // Exact Single Room Paint Calculation Logic (Memoized)
   const netArea = useMemo(() => {
@@ -26,7 +20,8 @@ export default function Tools() {
 
     if (l === 0 && w === 0) return 0;
 
-    const grossWallArea = 2 * (l + w) * h;
+    // Calculation includes Ceiling Area (l * w) + 4 Walls Area
+    const grossWallArea = (2 * (l + w) * h) + (l * w);
     const deductions = (d * 21) + (win * 12);
     return Math.max(0, grossWallArea - deductions);
   }, [length, width, height, doors, windows]);
@@ -41,50 +36,6 @@ export default function Tools() {
 
     return ((netArea * coats) / coveragePerLitre).toFixed(1);
   }, [netArea, paintType, coats]);
-
-  // House/Room-wise Preset Calculator Logic (Memoized)
-  const houseEst = useMemo(() => {
-    let baseWallArea = 0;
-    let ceilingArea = 0;
-
-    switch (houseType) {
-      case '1room':
-        baseWallArea = 450;
-        ceilingArea = 120;
-        break;
-      case '1bhk':
-        baseWallArea = 1200;
-        ceilingArea = 450;
-        break;
-      case '2bhk':
-        baseWallArea = 2200;
-        ceilingArea = 800;
-        break;
-      case '3bhk':
-        baseWallArea = 3200;
-        ceilingArea = 1200;
-        break;
-      case 'duplex':
-        baseWallArea = 5000;
-        ceilingArea = 2000;
-        break;
-      default:
-        baseWallArea = 2200;
-        ceilingArea = 800;
-    }
-
-    const totalArea = includeCeiling ? baseWallArea + ceilingArea : baseWallArea;
-    const totalLitres = (totalArea * 2) / 130; // 2 coats standard
-    const totalPrimer = totalArea / 140;
-    const totalPuttyKg = Math.round(totalArea / 15);
-
-    return {
-      area: totalArea,
-      paintLitres: totalLitres.toFixed(0),
-      primerLitres: totalPrimer.toFixed(0),
-      puttyKg: totalPuttyKg,
-    };
-  }, [houseType, includeCeiling]);
 
   // Bucket Packs Suggestion Breakdown (Memoized)
   const bucketBreakup = useMemo(() => {
@@ -121,277 +72,165 @@ export default function Tools() {
             स्मार्ट पेंटिंग <span className="font-semibold text-amber-400">टूल</span>
           </h2>
           <p className="text-neutral-400 max-w-xl mx-auto text-sm md:text-base">
-            अपने कमरे की नाप या घर के टाइप के अनुसार पेंट की सटीक मात्रा जानें।
+            अपने कमरे की नाप के अनुसार पेंट की सटीक मात्रा जानें।
           </p>
-        </div>
-
-        {/* Main Tools Tabs Navigation */}
-        <div role="tablist" aria-label="Painting Calculator Options" className="flex flex-wrap justify-center gap-2 md:gap-3 mb-10 max-w-2xl mx-auto bg-neutral-900/80 p-1.5 rounded-full border border-white/10 backdrop-blur-xl">
-          {[
-            { id: 'paint-calc', label: '🧮 Custom Paint Calculator' },
-            { id: 'room-calc', label: '🏠 Room & House Calculator' },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              role="tab"
-              aria-selected={activeTab === tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 py-3 px-4 rounded-full text-xs md:text-sm font-medium transition-all duration-300 min-w-[140px] ${
-                activeTab === tab.id
-                  ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-neutral-950 font-semibold shadow-lg shadow-amber-500/20 scale-[1.02]'
-                  : 'text-neutral-400 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
         </div>
 
         {/* Tool Content Container */}
         <div className="max-w-4xl mx-auto bg-neutral-900/60 border border-white/10 rounded-3xl p-6 md:p-10 backdrop-blur-2xl shadow-2xl relative overflow-hidden">
           
-          {/* TAB 1: SMART CUSTOM PAINT CALCULATOR */}
-          {activeTab === 'paint-calc' && (
-            <div className="space-y-8 animate-fadeIn">
-              <div className="border-b border-white/10 pb-6">
-                <h3 className="text-xl font-semibold text-white">Custom Wall Calculator (कमरा नापकर)</h3>
-                <p className="text-xs text-neutral-400">कमरे की नाप डालें और दरवाज़े-खिड़की माइनस करके सही मात्रा जानें</p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                
-                <div className="space-y-5">
-                  <div>
-                    <label htmlFor="paint-type" className="block text-xs font-medium text-amber-300 mb-2">पेंट का प्रकार (Paint Type)</label>
-                    <select
-                      id="paint-type"
-                      value={paintType}
-                      onChange={(e) => setPaintType(e.target.value)}
-                      className="w-full bg-neutral-800/90 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-400 transition-all text-sm"
-                    >
-                      <option value="interior">Interior Wall Paint (कमरे के अंदर)</option>
-                      <option value="exterior">Exterior Weather Proof (बाहरी दीवार)</option>
-                      <option value="primer">Primer Coat (प्राइमर)</option>
-                      <option value="putty">Wall Putty (वाल पुट्टी)</option>
-                    </select>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-3">
-                    <div>
-                      <label htmlFor="length" className="block text-xs text-neutral-300 mb-1">लंबाई (Feet)</label>
-                      <input
-                        id="length"
-                        type="number"
-                        min="0"
-                        placeholder="e.g. 12"
-                        value={length}
-                        onChange={(e) => setLength(e.target.value)}
-                        className="w-full bg-neutral-800/80 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:border-amber-400 focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="width" className="block text-xs text-neutral-300 mb-1">चौड़ाई (Feet)</label>
-                      <input
-                        id="width"
-                        type="number"
-                        min="0"
-                        placeholder="e.g. 10"
-                        value={width}
-                        onChange={(e) => setWidth(e.target.value)}
-                        className="w-full bg-neutral-800/80 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:border-amber-400 focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="height" className="block text-xs text-neutral-300 mb-1">ऊँचाई (Feet)</label>
-                      <input
-                        id="height"
-                        type="number"
-                        min="0"
-                        placeholder="10"
-                        value={height}
-                        onChange={(e) => setHeight(e.target.value)}
-                        className="w-full bg-neutral-800/80 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:border-amber-400 focus:outline-none"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label htmlFor="doors" className="block text-xs text-neutral-300 mb-1">दरवाजे (Doors)</label>
-                      <input
-                        id="doors"
-                        type="number"
-                        min="0"
-                        value={doors}
-                        onChange={(e) => setDoors(e.target.value)}
-                        className="w-full bg-neutral-800/80 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:border-amber-400 focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="windows" className="block text-xs text-neutral-300 mb-1">खिड़कियाँ (Windows)</label>
-                      <input
-                        id="windows"
-                        type="number"
-                        min="0"
-                        value={windows}
-                        onChange={(e) => setWindows(e.target.value)}
-                        className="w-full bg-neutral-800/80 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:border-amber-400 focus:outline-none"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-amber-300 mb-2">कोट की संख्या (Number of Coats)</label>
-                    <div className="flex gap-3">
-                      {[1, 2, 3].map((num) => (
-                        <button
-                          key={num}
-                          type="button"
-                          onClick={() => setCoats(num)}
-                          className={`flex-1 py-2 rounded-xl text-xs font-medium border transition-all ${
-                            coats === num
-                              ? 'bg-amber-400/20 border-amber-400 text-amber-300 font-semibold'
-                              : 'bg-neutral-800 border-white/5 text-neutral-400 hover:bg-neutral-700'
-                          }`}
-                        >
-                          {num} {num === 1 ? 'Coat' : 'Coats'}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                </div>
-
-                <div className="bg-gradient-to-br from-amber-500/10 via-neutral-900 to-neutral-900 p-6 rounded-2xl border border-amber-500/20 flex flex-col justify-between space-y-6">
-                  
-                  <div className="space-y-4" aria-live="polite">
-                    <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                      <span className="text-xs text-neutral-400">Net Wall Area (शुद्ध क्षेत्रफल):</span>
-                      <span className="text-sm font-mono text-amber-300">{netArea} Sq. Ft.</span>
-                    </div>
-
-                    <div className="text-center pt-2">
-                      <span className="text-xs text-neutral-400 uppercase tracking-widest block mb-1">
-                        कुल पेंट की आवश्यकता
-                      </span>
-                      <div className="text-4xl md:text-5xl font-bold text-amber-400">
-                        {estimatedQty} <span className="text-xl font-normal text-white">{paintType === 'putty' ? 'Kg' : 'Litre'}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {bucketBreakup.length > 0 && (
-                    <div className="bg-neutral-950/80 border border-white/10 p-4 rounded-xl space-y-2">
-                      <span className="text-[11px] text-amber-400 font-semibold uppercase tracking-wider block">
-                        📦 बाजार से खरीदें (Suggested Packs):
-                      </span>
-                      <div className="flex flex-wrap gap-2">
-                        {bucketBreakup.map((pack, i) => (
-                          <span key={i} className="bg-neutral-800 text-white text-xs px-3 py-1 rounded-full border border-white/10 font-mono">
-                            {pack}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  <p className="text-[11px] text-neutral-500 text-center italic">
-                    *यह गणना बिरला ओपस के मानक कवरेज एरिया पर आधारित है। यह दीवार की (Condition) नई और पुरानी स्थिति के हिसाब से ऊपर या नीचे (कम या ज्यादा) हो सकती है।
-                  </p>
-                </div>
-
-              </div>
+          <div className="space-y-8 animate-fadeIn">
+            <div className="border-b border-white/10 pb-6">
+              <h3 className="text-xl font-semibold text-white">Custom Wall Calculator </h3>
+              <p className="text-xs text-neutral-400">कमरे की नाप डालें और दरवाज़े-खिड़की माइनस करके सही मात्रा जानें</p>
             </div>
-          )}
 
-          {/* TAB 2: ROOM & HOUSE CALCULATOR */}
-          {activeTab === 'room-calc' && (
-            <div className="space-y-8 animate-fadeIn">
-              <div className="border-b border-white/10 pb-6">
-                <h3 className="text-xl font-semibold text-white">Room & House Calculator (पूरे घर का अनुमान)</h3>
-                <p className="text-xs text-neutral-400">अपने मकान का प्रकार चुनें और पूरे प्रोजेक्ट का तुरंत एस्टीमेट पाएं</p>
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              
+              {/* Inputs Section */}
+              <div className="space-y-5">
+                <div>
+                  <label htmlFor="paint-type" className="block text-xs font-medium text-amber-300 mb-2">पेंट का प्रकार (Paint Type)</label>
+                  <select
+                    id="paint-type"
+                    value={paintType}
+                    onChange={(e) => setPaintType(e.target.value)}
+                    className="w-full bg-neutral-800/90 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-400 transition-all text-sm"
+                  >
+                    <option value="interior">Interior Wall Paint (कमरे के अंदर)</option>
+                    <option value="exterior">Exterior Weather Proof (बाहरी दीवार)</option>
+                    <option value="primer">Primer Coat (प्राइमर)</option>
+                    <option value="putty">Wall Putty (वाल पुट्टी)</option>
+                  </select>
+                </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                
-                <div className="space-y-6">
+                <div className="grid grid-cols-3 gap-3">
                   <div>
-                    <label className="block text-xs font-medium text-amber-300 mb-3">
-                      घर/कमरे का प्रकार (Select Property Type)
-                    </label>
-                    <div className="grid grid-cols-2 gap-3">
-                      {[
-                        { id: '1room', label: '1 Single Room' },
-                        { id: '1bhk', label: '1 BHK House' },
-                        { id: '2bhk', label: '2 BHK House' },
-                        { id: '3bhk', label: '3 BHK House' },
-                        { id: 'duplex', label: 'Villa / Duplex' },
-                      ].map((item) => (
-                        <button
-                          key={item.id}
-                          onClick={() => setHouseType(item.id)}
-                          className={`py-3 px-4 rounded-xl text-xs font-medium border text-left transition-all ${
-                            houseType === item.id
-                              ? 'bg-amber-400/20 border-amber-400 text-amber-300 shadow-lg'
-                              : 'bg-neutral-800/80 border-white/5 text-neutral-400 hover:bg-neutral-700'
-                          }`}
-                        >
-                          {item.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3 bg-neutral-800/40 p-4 rounded-xl border border-white/5">
+                    <label htmlFor="length" className="block text-xs text-neutral-300 mb-1">लंबाई (Feet)</label>
                     <input
-                      type="checkbox"
-                      id="ceiling"
-                      checked={includeCeiling}
-                      onChange={(e) => setIncludeCeiling(e.target.checked)}
-                      className="w-4 h-4 accent-amber-400 rounded cursor-pointer"
+                      id="length"
+                      type="number"
+                      min="0"
+                      placeholder="e.g. 12"
+                      value={length}
+                      onChange={(e) => setLength(e.target.value)}
+                      className="w-full bg-neutral-800/80 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:border-amber-400 focus:outline-none"
                     />
-                    <label htmlFor="ceiling" className="text-xs text-neutral-300 cursor-pointer select-none">
-                      छत का पेंट भी शामिल करें (Include Ceiling Painting)
-                    </label>
+                  </div>
+                  <div>
+                    <label htmlFor="width" className="block text-xs text-neutral-300 mb-1">चौड़ाई (Feet)</label>
+                    <input
+                      id="width"
+                      type="number"
+                      min="0"
+                      placeholder="e.g. 10"
+                      value={width}
+                      onChange={(e) => setWidth(e.target.value)}
+                      className="w-full bg-neutral-800/80 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:border-amber-400 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="height" className="block text-xs text-neutral-300 mb-1">ऊँचाई (Feet)</label>
+                    <input
+                      id="height"
+                      type="number"
+                      min="0"
+                      placeholder="10"
+                      value={height}
+                      onChange={(e) => setHeight(e.target.value)}
+                      className="w-full bg-neutral-800/80 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:border-amber-400 focus:outline-none"
+                    />
                   </div>
                 </div>
 
-                {/* Estimate Result */}
-                <div className="bg-gradient-to-br from-amber-500/10 via-neutral-900 to-neutral-900 p-6 rounded-2xl border border-amber-500/20 space-y-5" aria-live="polite">
-                  <span className="text-xs text-amber-400 font-semibold uppercase tracking-wider block">
-                    📊 Estimated Requirement (2 Coats):
-                  </span>
-
-                  <div className="space-y-3 font-mono text-sm">
-                    <div className="flex justify-between items-center bg-neutral-950/60 p-3 rounded-xl border border-white/5">
-                      <span className="text-neutral-400">Total Painting Area:</span>
-                      <span className="text-amber-300 font-bold">{houseEst.area} Sq. Ft.</span>
-                    </div>
-
-                    <div className="flex justify-between items-center bg-neutral-950/60 p-3 rounded-xl border border-white/5">
-                      <span className="text-neutral-400">Emulsion Paint:</span>
-                      <span className="text-amber-400 font-bold text-base">{houseEst.paintLitres} Litres</span>
-                    </div>
-
-                    <div className="flex justify-between items-center bg-neutral-950/60 p-3 rounded-xl border border-white/5">
-                      <span className="text-neutral-400">Primer Requirement:</span>
-                      <span className="text-white font-semibold">{houseEst.primerLitres} Litres</span>
-                    </div>
-
-                    <div className="flex justify-between items-center bg-neutral-950/60 p-3 rounded-xl border border-white/5">
-                      <span className="text-neutral-400">Wall Putty Needed:</span>
-                      <span className="text-white font-semibold">{houseEst.puttyKg} Kg</span>
-                    </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="doors" className="block text-xs text-neutral-300 mb-1">दरवाजे (Doors)</label>
+                    <input
+                      id="doors"
+                      type="number"
+                      min="0"
+                      value={doors}
+                      onChange={(e) => setDoors(e.target.value)}
+                      className="w-full bg-neutral-800/80 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:border-amber-400 focus:outline-none"
+                    />
                   </div>
+                  <div>
+                    <label htmlFor="windows" className="block text-xs text-neutral-300 mb-1">खिड़कियाँ (Windows)</label>
+                    <input
+                      id="windows"
+                      type="number"
+                      min="0"
+                      value={windows}
+                      onChange={(e) => setWindows(e.target.value)}
+                      className="w-full bg-neutral-800/80 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:border-amber-400 focus:outline-none"
+                    />
+                  </div>
+                </div>
 
-                  <p className="text-[11px] text-neutral-500 italic text-center">
-                    *2 कोट पेंट + 1 कोट प्राइमर के आधार पर अनुमानित मान।
-                  </p>
+                <div>
+                  <label className="block text-xs font-medium text-amber-300 mb-2">कोट की संख्या (Number of Coats)</label>
+                  <div className="flex gap-3">
+                    {[1, 2, 3].map((num) => (
+                      <button
+                        key={num}
+                        type="button"
+                        onClick={() => setCoats(num)}
+                        className={`flex-1 py-2 rounded-xl text-xs font-medium border transition-all ${
+                          coats === num
+                            ? 'bg-amber-400/20 border-amber-400 text-amber-300 font-semibold'
+                            : 'bg-neutral-800 border-white/5 text-neutral-400 hover:bg-neutral-700'
+                        }`}
+                      >
+                        {num} {num === 1 ? 'Coat' : 'Coats'}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
               </div>
+
+              {/* Output Section */}
+              <div className="bg-gradient-to-br from-amber-500/10 via-neutral-900 to-neutral-900 p-6 rounded-2xl border border-amber-500/20 flex flex-col justify-between space-y-6">
+                
+                <div className="space-y-4" aria-live="polite">
+                  <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                    <span className="text-xs text-neutral-400">Net Wall Area (शुद्ध क्षेत्रफल):</span>
+                    <span className="text-sm font-mono text-amber-300">{netArea} Sq. Ft.</span>
+                  </div>
+
+                  <div className="text-center pt-2">
+                    <span className="text-xs text-neutral-400 uppercase tracking-widest block mb-1">
+                      कुल पेंट की आवश्यकता
+                    </span>
+                    <div className="text-4xl md:text-5xl font-bold text-amber-400">
+                      {estimatedQty} <span className="text-xl font-normal text-white">{paintType === 'putty' ? 'Kg' : 'Litre'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {bucketBreakup.length > 0 && (
+                  <div className="bg-neutral-950/80 border border-white/10 p-4 rounded-xl space-y-2">
+                    <span className="text-[11px] text-amber-400 font-semibold uppercase tracking-wider block">
+                      📦 बाजार से खरीदें (Suggested Packs):
+                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      {bucketBreakup.map((pack, i) => (
+                        <span key={i} className="bg-neutral-800 text-white text-xs px-3 py-1 rounded-full border border-white/10 font-mono">
+                          {pack}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <p className="text-[11px] text-neutral-500 text-center italic">
+                  *यह गणना बिरला ओपस के मानक कवरेज एरिया पर आधारित है। यह दीवार की (Condition) नई और पुरानी स्थिति के हिसाब से ऊपर या नीचे (कम या ज्यादा) हो सकती है।
+                </p>
+              </div>
+
             </div>
-          )}
+          </div>
 
         </div>
 
