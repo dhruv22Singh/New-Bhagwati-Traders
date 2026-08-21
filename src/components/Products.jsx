@@ -58,10 +58,12 @@ const puttyGallery = [put1, put2, put3, put4, put5];
 export default function Products() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
+  
   useBackToClose(Boolean(selectedProduct || previewImage), () => {
-  if (typeof setSelectedProduct === 'function') setSelectedProduct(null);
-  if (typeof setPreviewImage === 'function') setPreviewImage(null);
-});
+    if (typeof setSelectedProduct === 'function') setSelectedProduct(null);
+    if (typeof setPreviewImage === 'function') setPreviewImage(null);
+  });
+  
   // Security Features (Prevent Image Downloading & Copying)
   useEffect(() => {
     const handleContextMenu = (e) => e.preventDefault();
@@ -201,7 +203,10 @@ export default function Products() {
             {selectedProduct.gallery.map((imgSrc, idx) => (
               <div
                 key={idx}
-                onClick={() => setPreviewImage(imgSrc)}
+                onClick={(e) => {
+                  e.stopPropagation(); // BUG FIX: Click bahar failne se rokne ke liye
+                  setPreviewImage(imgSrc);
+                }}
                 className="h-64 rounded-2xl overflow-hidden border border-white/10 bg-neutral-900 group relative shadow-xl cursor-pointer hover:border-amber-400/50 transition-all duration-300"
               >
                 <img
@@ -238,11 +243,15 @@ export default function Products() {
             draggable="false"
             loading='lazy'
             decoding='async'
-            className="max-w-full max-h-[90vh] object-contain rounded-2xl border border-amber-500/30 shadow-2xl pointer-events-none"
+            onClick={(e) => e.stopPropagation()} // BUG FIX: Click karne par photo turant close nahi hogi
+            className="max-w-full max-h-[90vh] object-contain rounded-2xl border border-amber-500/30 shadow-2xl"
           />
           <button
-            onClick={() => setPreviewImage(null)}
-            className="absolute top-6 right-6 px-4 py-2 bg-neutral-900/80 text-amber-400 border border-amber-500/30 rounded-full text-sm font-bold cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation();
+              setPreviewImage(null);
+            }}
+            className="absolute top-6 right-6 px-4 py-2 bg-neutral-900/80 text-amber-400 border border-amber-500/30 rounded-full text-sm font-bold cursor-pointer hover:bg-neutral-800 transition-colors"
           >
             ✕ Close Zoom
           </button>
