@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useBackToClose } from '../hooks/useBackToClose';
 
 // -------------------------------------------------------------
@@ -58,12 +58,15 @@ const puttyGallery = [put1, put2, put3, put4, put5];
 export default function Products() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
-  
-  useBackToClose(Boolean(selectedProduct || previewImage), () => {
-    if (typeof setSelectedProduct === 'function') setSelectedProduct(null);
-    if (typeof setPreviewImage === 'function') setPreviewImage(null);
-  });
-  
+
+  // FIX: useCallback ka use kiya taaki re-render par ye function change na ho
+  const handleCloseModals = useCallback(() => {
+    setSelectedProduct(null);
+    setPreviewImage(null);
+  }, []);
+
+  useBackToClose(Boolean(selectedProduct || previewImage), handleCloseModals);
+
   // Security Features (Prevent Image Downloading & Copying)
   useEffect(() => {
     const handleContextMenu = (e) => e.preventDefault();
@@ -204,7 +207,7 @@ export default function Products() {
               <div
                 key={idx}
                 onClick={(e) => {
-                  e.stopPropagation(); // BUG FIX: Click bahar failne se rokne ke liye
+                  e.stopPropagation(); 
                   setPreviewImage(imgSrc);
                 }}
                 className="h-64 rounded-2xl overflow-hidden border border-white/10 bg-neutral-900 group relative shadow-xl cursor-pointer hover:border-amber-400/50 transition-all duration-300"
@@ -243,7 +246,7 @@ export default function Products() {
             draggable="false"
             loading='lazy'
             decoding='async'
-            onClick={(e) => e.stopPropagation()} // BUG FIX: Click karne par photo turant close nahi hogi
+            onClick={(e) => e.stopPropagation()} 
             className="max-w-full max-h-[90vh] object-contain rounded-2xl border border-amber-500/30 shadow-2xl"
           />
           <button
